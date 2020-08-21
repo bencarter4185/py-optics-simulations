@@ -74,9 +74,10 @@ step = z[1] - z[0]
 # Define matrix of system according to ray transfer matrix analysis
 matrix = np.array([[1, step], [0, 1]]) # ABCD matrix for free space prop.
 
+matrix_init = np.identity(2)
+
 # Iterate through waist to calculate its value in each z
 for i in range(len(z)):
-
         
     # Dont need to calculate new parameters if at end of loop
     if i == max(range(len(z))):
@@ -88,13 +89,20 @@ for i in range(len(z)):
     current_waist = waist[i]
     current_angle = angle[i]
     
+    # calculate new matrix
+    if i == 0:
+        current_matrix = np.dot(matrix, matrix_init)
+    else:
+        current_matrix = np.dot(matrix, current_matrix)
+
+    
     # q_i is based on current position
-    q_i = q_i_from_waist(waist = current_waist, 
-                       angle = current_angle,
+    q_i = q_i_from_waist(waist = waist_0, 
+                       angle = angle_0,
                        index = index,
                        wavelength = wavelength)
 
-    q_f = q_f_from_matrix(q_i, matrix)
+    q_f = q_f_from_matrix(q_i, current_matrix)
 
     new_waist, new_angle = waist_angle_from_q_f(q_f, index, wavelength)
 
@@ -102,13 +110,6 @@ for i in range(len(z)):
     waist[i+1] = new_waist
     angle[i+1] = new_angle
 
-    '''
-    # calculate new q_f value
-    q_f = q_from_waist(waist = current_waist, 
-                       angle = current_angle,
-                       index = index,
-                       wavelength = wavelength)
-    '''
     
 plt.plot(z, np.zeros(len(z)), 'k--')
 plt.plot(z, waist, 'b-')
